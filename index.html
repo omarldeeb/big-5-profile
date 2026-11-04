@@ -56,7 +56,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .row { display: flex; flex-wrap: wrap; gap: 10px; }
 .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .fields label { display: flex; flex-direction: column; gap: 4px; font-size: 15px; font-weight: 600; }
-.fields input { font: inherit; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); }
+.fields input, .fields select { font: inherit; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); }
 .scale-key { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; text-align: center; font-size: 14px; }
 .scale-key div { background: var(--accent-soft); border-radius: 8px; padding: 8px 4px; }
 .scale-key b { display: block; font-family: var(--display); font-size: 22px; }
@@ -117,15 +117,16 @@ ul.plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
 .ex { grid-column: 2; font-size: 15px; color: var(--muted); }
 .ends { grid-column: 2; display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--muted); }
 .ends span:last-child { text-align: right; }
-.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.mode { border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: flex; gap: 10px; align-items: flex-start; cursor: pointer; font-size: 15px; }
-.mode b { display: block; font-size: 17px; }
-.mode input { width: 20px; height: 20px; margin-top: 3px; accent-color: var(--accent); flex: none; }
-.mode:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.modebar { display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
+.modebar .lbl { font-size: 14px; color: var(--muted); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--card); }
+.seg button { border: 0; border-radius: 0; padding: 8px 16px; font-size: 15px; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.fields .full { grid-column: 1 / -1; }
 .sticky { position: sticky; top: 0; z-index: 2; }
 .hidden { display: none !important; }
 @media (max-width: 480px) {
-  .modes { grid-template-columns: 1fr; }
   h1 { font-size: 34px; }
   .qtext { font-size: 25px; }
   .fields { grid-template-columns: 1fr; }
@@ -163,23 +164,39 @@ ul.plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
       <p class="muted">Example: if "I start conversations" fits you fairly well, pick 4.</p>
     </div>
     <div class="card">
-      <h3>About you <span class="muted" style="font-family:var(--body);font-size:15px;font-weight:400">(optional, shown on your PDF)</span></h3>
-      <div class="fields">
-        <label for="f-name">Name<input id="f-name" type="text" autocomplete="name"></label>
-        <label for="f-date">Date<input id="f-date" type="date"></label>
-        <label for="f-sport">Sport / position<input id="f-sport" type="text"></label>
-        <label for="f-age">Age<input id="f-age" type="number" min="5" max="99" inputmode="numeric"></label>
-      </div>
-      <h3>How do you want to answer?</h3>
-      <div class="modes" role="radiogroup" aria-label="Answer mode">
-        <label class="mode" for="mode-guided"><input type="radio" name="mode" id="mode-guided" value="guided" checked><span><b>One at a time</b>One statement per screen. Best on a phone.</span></label>
-        <label class="mode" for="mode-list"><input type="radio" name="mode" id="mode-list" value="list"><span><b>All on one page</b>Scroll and answer every statement in a list.</span></label>
-      </div>
-      <p class="muted" style="font-size:14px">You can switch at any time without losing answers.</p>
       <label class="check" for="f-agree"><input id="f-agree" type="checkbox"><span>I understand what this is for. My answers stay on this device unless I choose to share my results. (Under 18: a parent or guardian knows I am doing this.)</span></label>
       <div class="row">
         <button class="primary" id="b-start" disabled>Start</button>
         <button id="b-resume" class="hidden">Continue where I left off</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ANSWER VIEW SWITCH (every screen except welcome) -->
+  <div class="modebar hidden" id="modebar">
+    <span class="lbl" id="modebar-lbl">View</span>
+    <div class="seg" role="group" aria-label="How to show the statements">
+      <button type="button" id="m-cards" aria-pressed="true">Cards</button>
+      <button type="button" id="m-list" aria-pressed="false">List</button>
+    </div>
+  </div>
+
+  <!-- ABOUT YOU (optional) -->
+  <section id="v-about" class="hidden">
+    <div class="card">
+      <div class="eyebrow">Optional</div>
+      <h2>About you</h2>
+      <p class="muted">This only appears on your results and PDF, so your coach knows whose profile it is. Skip it if you prefer. Today's date is added for you.</p>
+      <div class="fields">
+        <label for="f-name">Name<input id="f-name" type="text" autocomplete="name"></label>
+        <label for="f-age">Age<input id="f-age" type="number" min="5" max="99" inputmode="numeric"></label>
+        <label for="f-prof">Profession / sport<select id="f-prof"></select></label>
+        <label for="f-pos">Position / role<input id="f-pos" type="text" list="pos-list" placeholder="Pick or type"><datalist id="pos-list"></datalist></label>
+        <label for="f-prof-other" class="full hidden" id="f-prof-other-wrap">Type your profession or sport<input id="f-prof-other" type="text"></label>
+      </div>
+      <div class="row">
+        <button class="primary" id="b-about-next">Continue</button>
+        <button id="b-about-skip">Skip</button>
       </div>
     </div>
   </section>
@@ -201,7 +218,6 @@ ul.plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
         <button id="b-next">Next</button>
       </div>
       <p class="muted" style="font-size:14px">Tip: tap an answer to move on. On a keyboard, press 1 to 5.</p>
-      <button id="b-to-list">Switch to all on one page</button>
     </div>
   </section>
 
@@ -214,7 +230,6 @@ ul.plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
       </div>
       <div class="row">
         <button class="primary" id="b-list-results" disabled>See my results</button>
-        <button id="b-to-guided">Switch to one at a time</button>
       </div>
     </div>
     <div class="card">
@@ -437,6 +452,39 @@ ul.plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
     }
   };
 
+  // ---------- Profession / position options ----------
+  // Sports first (the main audience), then related and general professions. "Other" entries reveal a free-text field.
+  var PROFESSIONS = [
+    ["Sport", ["Football", "Basketball", "Handball", "Volleyball", "Tennis", "Squash", "Padel", "Swimming", "Athletics (track and field)", "Rowing", "Gymnastics", "Combat sports", "Fencing", "Water polo", "Rugby", "Cricket", "Cycling", "Esports", "Other sport"]],
+    ["Other profession", ["Coach", "Sport science or medical", "Fitness trainer", "Student", "Business or office", "Other"]]
+  ];
+  var POSITIONS = {
+    "Football": ["Goalkeeper", "Centre-back", "Full-back / wing-back", "Defensive midfielder", "Central midfielder", "Attacking midfielder", "Winger", "Striker"],
+    "Basketball": ["Point guard", "Shooting guard", "Small forward", "Power forward", "Center"],
+    "Handball": ["Goalkeeper", "Left wing", "Right wing", "Left back", "Right back", "Centre back (playmaker)", "Pivot (line player)"],
+    "Volleyball": ["Setter", "Outside hitter", "Opposite", "Middle blocker", "Libero"],
+    "Tennis": ["Singles", "Doubles", "Singles and doubles"],
+    "Squash": ["Singles", "Doubles"],
+    "Padel": ["Left side (revés)", "Right side (drive)", "Both sides"],
+    "Swimming": ["Sprint freestyle", "Distance freestyle", "Backstroke", "Breaststroke", "Butterfly", "Individual medley", "Open water"],
+    "Athletics (track and field)": ["Sprints", "Hurdles", "Middle distance", "Long distance", "Jumps", "Throws", "Combined events", "Race walking"],
+    "Rowing": ["Sculling", "Sweep", "Coxswain"],
+    "Gymnastics": ["Artistic", "Rhythmic", "Trampoline", "Acrobatic"],
+    "Combat sports": ["Judo", "Karate", "Taekwondo", "Boxing", "Wrestling", "Kickboxing", "MMA"],
+    "Fencing": ["Foil", "Épée", "Sabre"],
+    "Water polo": ["Goalkeeper", "Centre forward", "Centre back", "Driver", "Wing", "Point"],
+    "Rugby": ["Prop", "Hooker", "Lock", "Flanker", "Number 8", "Scrum-half", "Fly-half", "Centre", "Wing", "Full-back"],
+    "Cricket": ["Batter", "Pace bowler", "Spin bowler", "All-rounder", "Wicketkeeper"],
+    "Cycling": ["Road", "Track", "Mountain bike", "BMX"],
+    "Esports": ["Player", "Team captain", "In-game leader", "Substitute"],
+    "Coach": ["Head coach", "Assistant coach", "Strength and conditioning coach", "Goalkeeper coach", "Youth coach", "Performance analyst"],
+    "Sport science or medical": ["Physiotherapist", "Sport psychologist", "Nutritionist", "Team doctor", "Sport scientist"],
+    "Fitness trainer": ["Personal trainer", "Group fitness instructor", "Strength and conditioning"],
+    "Student": ["School student", "University student", "Sport science student"],
+    "Business or office": ["Manager", "Team member", "Founder / owner", "Freelancer"]
+  };
+  function isOther(p) { return p === "Other sport" || p === "Other"; }
+
   // ---------- State ----------
   var KEY = "bigfive-athlete-v1";
   var state = { answers: new Array(50).fill(0), idx: 0, info: {} };
@@ -450,50 +498,87 @@ ul.plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
   }
 
   var $ = function (id) { return document.getElementById(id); };
-  var views = ["welcome", "quiz", "list", "review", "results"];
+  var views = ["welcome", "about", "quiz", "list", "review", "results"];
+  var current = "welcome";
   function show(v) {
+    current = v;
     views.forEach(function (n) { $("v-" + n).classList.toggle("hidden", n !== v); });
+    $("modebar").classList.toggle("hidden", v === "welcome");
+    // On About you the switch only sets the preference; elsewhere it jumps to the answers in that view
+    $("modebar-lbl").textContent = v === "about" ? "Answer as" : v === "results" ? "See answers as" : "View";
+    paintMode();
     window.scrollTo(0, 0);
+  }
+  function paintMode() {
+    var list = state.mode === "list";
+    $("m-cards").setAttribute("aria-pressed", String(!list));
+    $("m-list").setAttribute("aria-pressed", String(list));
   }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function sentence(i) { var t = ITEMS[i]; return "I " + t.charAt(0).toLowerCase() + t.slice(1); }
   function answeredCount() { return state.answers.filter(function (a) { return a > 0; }).length; }
 
   // ---------- Welcome ----------
-  $("f-date").value = new Date().toISOString().slice(0, 10);
+  function today() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  var profSel = $("f-prof");
+  profSel.innerHTML = '<option value="">Choose…</option>' + PROFESSIONS.map(function (g) {
+    return '<optgroup label="' + esc(g[0]) + '">' + g[1].map(function (o) { return '<option>' + esc(o) + "</option>"; }).join("") + "</optgroup>";
+  }).join("");
+  function syncProf() {
+    var p = profSel.value;
+    $("f-prof-other-wrap").classList.toggle("hidden", !isOther(p));
+    $("pos-list").innerHTML = (POSITIONS[p] || []).map(function (o) { return '<option value="' + esc(o) + '">'; }).join("");
+  }
+  profSel.addEventListener("change", function () { $("f-pos").value = ""; syncProf(); });
   $("f-agree").addEventListener("change", function () { $("b-start").disabled = !this.checked; });
   function readInfo() {
-    state.info = { name: $("f-name").value.trim(), date: $("f-date").value, sport: $("f-sport").value.trim(), age: $("f-age").value.trim() };
+    var p = profSel.value;
+    state.info = {
+      name: $("f-name").value.trim(), age: $("f-age").value.trim(),
+      profession: isOther(p) ? $("f-prof-other").value.trim() : p,
+      position: $("f-pos").value.trim(), date: today()
+    };
+  }
+  function fillInfo(i) {
+    i = i || {};
+    $("f-name").value = i.name || ""; $("f-age").value = i.age || ""; $("f-pos").value = "";
+    var known = PROFESSIONS.some(function (g) { return g[1].indexOf(i.profession) >= 0; });
+    profSel.value = known ? i.profession : i.profession ? "Other" : "";
+    $("f-prof-other").value = known ? "" : (i.profession || "");
+    syncProf();
+    $("f-pos").value = i.position || i.sport || "";
   }
   var saved = load();
   if (saved && saved.answers.some(function (a) { return a > 0; })) {
     $("b-resume").classList.remove("hidden");
     $("b-resume").textContent = "Continue where I left off (" + saved.answers.filter(function (a) { return a > 0; }).length + " of 50)";
-    if (saved.info) {
-      $("f-name").value = saved.info.name || ""; $("f-sport").value = saved.info.sport || "";
-      $("f-age").value = saved.info.age || ""; if (saved.info.date) $("f-date").value = saved.info.date;
+  }
+  function openAnswering() {
+    if (state.mode === "list") {
+      renderList(); show("list");
+      var el = $("litem-" + (state.idx + 1)); if (el && state.idx > 0) el.scrollIntoView({ block: "center" });
+    } else {
+      var firstMissing = state.answers.indexOf(0);
+      if (state.answers[state.idx] && firstMissing >= 0) state.idx = firstMissing;
+      renderQ(); show("quiz");
     }
   }
-  function chosenMode() { return $("mode-list").checked ? "list" : "guided"; }
-  function openAnswering() {
-    if (state.mode === "list") { renderList(); show("list"); } else { renderQ(); show("quiz"); }
+  function setMode(m) {
+    clearTimeout(advanceTimer);
+    state.mode = m; save(); paintMode();
+    if (current !== "about") openAnswering();
   }
-  if (saved && saved.mode === "list") $("mode-list").checked = true;
+  $("m-cards").addEventListener("click", function () { setMode("guided"); });
+  $("m-list").addEventListener("click", function () { setMode("list"); });
   $("b-start").addEventListener("click", function () {
-    readInfo(); state.answers = new Array(50).fill(0); state.idx = 0; state.mode = chosenMode(); save(); openAnswering();
+    state = { answers: new Array(50).fill(0), idx: 0, info: {}, mode: state.mode || "guided" };
+    fillInfo({}); save(); show("about");
   });
+  $("b-about-next").addEventListener("click", function () { readInfo(); save(); openAnswering(); });
+  $("b-about-skip").addEventListener("click", function () { state.info = { date: today() }; save(); openAnswering(); });
   $("b-resume").addEventListener("click", function () {
-    state = saved; readInfo(); state.mode = chosenMode(); save();
+    state = saved; state.mode = state.mode || "guided"; save();
     if (answeredCount() === 50) { renderReview(); show("review"); } else openAnswering();
-  });
-  $("b-to-list").addEventListener("click", function () {
-    clearTimeout(advanceTimer); state.mode = "list"; $("mode-list").checked = true; save(); renderList(); show("list");
-    var el = $("litem-" + (state.idx + 1)); if (el) el.scrollIntoView({ block: "center" });
-  });
-  $("b-to-guided").addEventListener("click", function () {
-    state.mode = "guided"; $("mode-guided").checked = true;
-    var firstMissing = state.answers.indexOf(0); if (firstMissing >= 0) state.idx = firstMissing;
-    save(); renderQ(); show("quiz");
   });
 
   // ---------- Quiz ----------
@@ -594,12 +679,9 @@ ul.plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
   $("b-back-quiz").addEventListener("click", function () {
     var firstMissing = state.answers.indexOf(0);
     if (firstMissing >= 0) state.idx = firstMissing;
-    if (state.mode === "list") {
-      renderList(); show("list");
-      var el = $("litem-" + (state.idx + 1)); if (el) el.scrollIntoView({ block: "center" });
-    } else { renderQ(); show("quiz"); }
+    openAnswering();
   });
-  function goResults() { renderResults(); show("results"); }
+  function goResults() { state.info = state.info || {}; state.info.date = today(); save(); renderResults(); show("results"); }
   $("b-results").addEventListener("click", goResults);
   $("b-results2").addEventListener("click", goResults);
 
@@ -632,7 +714,7 @@ ul.plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
   function renderResults() {
     readInfoFromState();
     var s = scores(); lastScores = s;
-    var who = [state.info.name, state.info.sport].filter(Boolean).join(" · ");
+    var who = [state.info.name, state.info.position || state.info.sport, state.info.profession].filter(Boolean).join(" · ");
     $("res-who").textContent = who ? who : "Your profile";
     var sum = $("res-summary"); sum.innerHTML = "";
     ORDER.forEach(function (t) {
@@ -662,9 +744,10 @@ ul.plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
     var s = lastScores || scores(), i = state.info || {};
     var lines = ["Athlete Personality Profile (Big Five)"];
     if (i.name) lines.push("Name: " + i.name);
-    if (i.sport) lines.push("Sport / position: " + i.sport);
+    if (i.profession) lines.push("Profession / sport: " + i.profession);
+    if (i.position || i.sport) lines.push("Position / role: " + (i.position || i.sport));
     if (i.age) lines.push("Age: " + i.age);
-    lines.push("Date: " + (i.date || new Date().toISOString().slice(0, 10)), "");
+    lines.push("Date: " + (i.date || today()), "");
     ORDER.forEach(function (t) { lines.push(TRAITS[t].name + ": " + s[t] + "/50 (" + BANDS[bandOf(s[t])].name + ")"); });
     lines.push("Emotional stability: " + (60 - s.N) + "/50", "", "Answers 1-50: " + state.answers.join(","));
     return lines.join("\n");
@@ -701,14 +784,14 @@ ul.plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
     }
     text("Athlete Personality Profile", 22, navy, "bold"); y += 1;
     text("Big Five self-reflection results", 11, teal); y += 3;
-    var meta = [["Name", info.name || "-"], ["Sport / position", info.sport || "-"], ["Age", info.age || "-"], ["Date", info.date || new Date().toISOString().slice(0, 10)]];
+    var meta = [["Name", info.name || "-"], ["Age", info.age || "-"], ["Profession", info.profession || "-"], ["Position", info.position || info.sport || "-"], ["Date", info.date || today()]];
     doc.setFontSize(10);
     meta.forEach(function (m, k) {
       var x = M + (k % 2) * (CW / 2), yy = y + Math.floor(k / 2) * 6;
       doc.setFont("helvetica", "bold"); doc.setTextColor.apply(doc, grey); doc.text(m[0] + ":", x, yy + 4);
       doc.setFont("helvetica", "normal"); doc.setTextColor.apply(doc, navy); doc.text(String(m[1]), x + 30, yy + 4);
     });
-    y += 15;
+    y += Math.ceil(meta.length / 2) * 6 + 3;
     doc.setDrawColor.apply(doc, track); doc.line(M, y, W - M, y); y += 6;
 
     // Summary bars
@@ -846,10 +929,10 @@ ul.plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
   $("b-restart").addEventListener("click", function () { $("restart-confirm").classList.remove("hidden"); $("restart-confirm").scrollIntoView({ block: "center" }); });
   $("b-restart-no").addEventListener("click", function () { $("restart-confirm").classList.add("hidden"); });
   $("b-restart-yes").addEventListener("click", function () {
-    state = { answers: new Array(50).fill(0), idx: 0, info: {} };
+    state = { answers: new Array(50).fill(0), idx: 0, info: {}, mode: state.mode };
     try { localStorage.removeItem(KEY); } catch (e) {}
     $("restart-confirm").classList.add("hidden");
-    $("f-name").value = ""; $("f-sport").value = ""; $("f-age").value = ""; $("f-agree").checked = false; $("b-start").disabled = true;
+    fillInfo({}); $("f-agree").checked = false; $("b-start").disabled = true;
     $("b-resume").classList.add("hidden");
     show("welcome");
   });
