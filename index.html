@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Athlete Personality Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Layout: one centered column like a training card; one question per screen, scoreboard bars on results */
+  --ink: #14233a;
+  --muted: #5b6878;
+  --paper: #f4f6f8;
+  --card: #ffffff;
+  --line: #d9dfe6;
+  --accent: #0e7c86;
+  --accent-ink: #ffffff;
+  --accent-soft: #e2f2f3;
+  --b1: #c9d3dd; --b2: #a9c9cd; --b3: #6fb0b6; --b4: #2f8f98; --b5: #0e6a73;
+  --display: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+  --body: "Source Sans 3", "Segoe UI", Roboto, Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #e7edf3; --muted: #9aa8b6; --paper: #0f1720; --card: #17222e; --line: #2a3846;
+    --accent: #3cb6bf; --accent-ink: #062226; --accent-soft: #143238;
+    --b1: #2a3846; --b2: #2c5157; --b3: #2f7178; --b4: #3196a0; --b5: #45c0c9;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ink: #e7edf3; --muted: #9aa8b6; --paper: #0f1720; --card: #17222e; --line: #2a3846;
+  --accent: #3cb6bf; --accent-ink: #062226; --accent-soft: #143238;
+  --b1: #2a3846; --b2: #2c5157; --b3: #2f7178; --b4: #3196a0; --b5: #45c0c9;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.5; }
+.wrap { max-width: 680px; margin: 0 auto; padding: 24px 16px 64px; display: flex; flex-direction: column; gap: 20px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; letter-spacing: .01em; line-height: 1.1; margin: 0; text-wrap: balance; }
+h1 { font-size: 40px; }
+h2 { font-size: 28px; }
+h3 { font-size: 22px; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.eyebrow { font-family: var(--display); text-transform: uppercase; letter-spacing: .08em; font-size: 15px; color: var(--accent); font-weight: 600; }
+button, .btn { font: inherit; cursor: pointer; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); padding: 12px 18px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+button:focus-visible, .btn:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.fields label { display: flex; flex-direction: column; gap: 4px; font-size: 15px; font-weight: 600; }
+.fields input { font: inherit; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); }
+.scale-key { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; text-align: center; font-size: 14px; }
+.scale-key div { background: var(--accent-soft); border-radius: 8px; padding: 8px 4px; }
+.scale-key b { display: block; font-family: var(--display); font-size: 22px; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 16px; }
+.check input { width: 22px; height: 22px; margin-top: 2px; accent-color: var(--accent); flex: none; }
+ul.plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+
+/* Quiz */
+.progress { display: flex; flex-direction: column; gap: 6px; }
+.progress-top { display: flex; justify-content: space-between; font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.bar { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .25s; }
+.qnum { font-family: var(--display); font-size: 18px; color: var(--accent); font-weight: 600; }
+.qtext { font-size: 30px; line-height: 1.25; font-weight: 600; text-wrap: balance; min-height: 2.5em; }
+.qhint { font-size: 15px; color: var(--muted); }
+.answers { display: flex; flex-direction: column; gap: 10px; }
+.answer { justify-content: flex-start; text-align: left; padding: 14px 16px; font-size: 18px; gap: 14px; min-height: 56px; }
+.answer .n { font-family: var(--display); font-size: 22px; width: 34px; height: 34px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.answer[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.answer[aria-pressed="true"] .n { background: var(--accent-ink); color: var(--accent); }
+.nav { display: flex; justify-content: space-between; gap: 10px; }
+
+/* Review */
+.review-list { display: flex; flex-direction: column; }
+.ritem { display: grid; grid-template-columns: 34px 1fr; gap: 6px 10px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.ritem:last-child { border-bottom: 0; }
+.ritem .num { font-family: var(--display); font-size: 20px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ritem .stmt { font-weight: 600; }
+.mini { grid-column: 2; display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.mini button { padding: 8px 0; font-family: var(--display); font-size: 18px; }
+.mini button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.ritem.missing { background: color-mix(in srgb, #d97706 10%, transparent); border-radius: 8px; padding-left: 8px; padding-right: 8px; }
+.flag { color: #b45309; font-weight: 700; font-size: 14px; }
+
+/* Results */
+.summary { display: flex; flex-direction: column; gap: 14px; }
+.srow { display: grid; grid-template-columns: 1fr auto; gap: 6px; }
+.srow .name { font-weight: 700; }
+.srow .score { font-family: var(--display); font-size: 22px; font-variant-numeric: tabular-nums; }
+.track { grid-column: 1 / -1; position: relative; height: 22px; display: grid; grid-template-columns: 13fr 7fr 7fr 7fr 7fr; border-radius: 6px; overflow: hidden; }
+.track span { background: var(--b1); border-right: 2px solid var(--card); }
+.track span.on { background: var(--accent); }
+.track span:last-child { border-right: 0; }
+.marker { position: absolute; top: -4px; bottom: -4px; width: 4px; border-radius: 2px; background: var(--ink); transform: translateX(-2px); }
+.scale-labels { grid-column: 1 / -1; display: grid; grid-template-columns: 13fr 7fr 7fr 7fr 7fr; font-size: 12px; color: var(--muted); }
+.scale-labels span { padding-left: 2px; }
+.pill { display: inline-block; font-size: 14px; font-weight: 700; padding: 3px 10px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); }
+.trait-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.trait-sub { font-size: 15px; color: var(--muted); }
+.block { display: flex; flex-direction: column; gap: 4px; }
+.block b { font-size: 14px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.ask { border-left: 4px solid var(--accent); padding: 8px 12px; background: var(--accent-soft); border-radius: 0 8px 8px 0; font-style: italic; }
+.refs { font-size: 15px; }
+.refs a { color: var(--accent); }
+.toast { min-height: 1.5em; font-size: 15px; color: var(--accent); font-weight: 600; }
+.answer .lab { display: flex; flex-direction: column; gap: 2px; }
+.answer .sub { font-size: 14px; font-weight: 400; opacity: .85; }
+.ex { grid-column: 2; font-size: 15px; color: var(--muted); }
+.ends { grid-column: 2; display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--muted); }
+.ends span:last-child { text-align: right; }
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mode { border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: flex; gap: 10px; align-items: flex-start; cursor: pointer; font-size: 15px; }
+.mode b { display: block; font-size: 17px; }
+.mode input { width: 20px; height: 20px; margin-top: 3px; accent-color: var(--accent); flex: none; }
+.mode:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.sticky { position: sticky; top: 0; z-index: 2; }
+.hidden { display: none !important; }
+@media (max-width: 480px) {
+  .modes { grid-template-columns: 1fr; }
+  h1 { font-size: 34px; }
+  .qtext { font-size: 25px; }
+  .fields { grid-template-columns: 1fr; }
+  .scale-key { font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .bar > i { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- WELCOME -->
+  <section id="v-welcome">
+    <div class="card">
+      <div class="eyebrow">Big Five self-reflection</div>
+      <h1>Athlete Personality Profile</h1>
+      <p>This helps you and your coach understand how you naturally think, feel and work with others, so coaching and feedback can fit <b>you</b>.</p>
+      <ul class="plain">
+        <li>There are <b>no right or wrong answers</b> and no good or bad personality.</li>
+        <li>This is not a test, and it is not used for team selection.</li>
+        <li>Answer as you <b>usually are now</b>, not how you wish to be, and not only in sport.</li>
+        <li>Go with your first reaction. 50 short statements, about 10 minutes.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>How to answer</h3>
+      <p>For each statement, pick how well it describes you.</p>
+      <div class="scale-key">
+        <div><b>1</b>Very inaccurate</div>
+        <div><b>2</b>Moderately inaccurate</div>
+        <div><b>3</b>Neither</div>
+        <div><b>4</b>Moderately accurate</div>
+        <div><b>5</b>Very accurate</div>
+      </div>
+      <p class="muted">Example: if "I start conversations" fits you fairly well, pick 4.</p>
+    </div>
+    <div class="card">
+      <h3>About you <span class="muted" style="font-family:var(--body);font-size:15px;font-weight:400">(optional, shown on your PDF)</span></h3>
+      <div class="fields">
+        <label for="f-name">Name<input id="f-name" type="text" autocomplete="name"></label>
+        <label for="f-date">Date<input id="f-date" type="date"></label>
+        <label for="f-sport">Sport / position<input id="f-sport" type="text"></label>
+        <label for="f-age">Age<input id="f-age" type="number" min="5" max="99" inputmode="numeric"></label>
+      </div>
+      <h3>How do you want to answer?</h3>
+      <div class="modes" role="radiogroup" aria-label="Answer mode">
+        <label class="mode" for="mode-guided"><input type="radio" name="mode" id="mode-guided" value="guided" checked><span><b>One at a time</b>One statement per screen. Best on a phone.</span></label>
+        <label class="mode" for="mode-list"><input type="radio" name="mode" id="mode-list" value="list"><span><b>All on one page</b>Scroll and answer every statement in a list.</span></label>
+      </div>
+      <p class="muted" style="font-size:14px">You can switch at any time without losing answers.</p>
+      <label class="check" for="f-agree"><input id="f-agree" type="checkbox"><span>I understand what this is for. My answers stay on this device unless I choose to share my results. (Under 18: a parent or guardian knows I am doing this.)</span></label>
+      <div class="row">
+        <button class="primary" id="b-start" disabled>Start</button>
+        <button id="b-resume" class="hidden">Continue where I left off</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="v-quiz" class="hidden">
+    <div class="card">
+      <div class="progress">
+        <div class="progress-top"><span id="q-count">Question 1 of 50</span><span id="q-done">0 answered</span></div>
+        <div class="bar"><i id="q-bar"></i></div>
+      </div>
+      <div class="qnum" id="q-num">Statement 1</div>
+      <div class="qtext" id="q-text"></div>
+      <div class="qhint" id="q-hint"></div>
+      <div class="answers" id="q-answers" role="group" aria-label="How accurately does this describe you?"></div>
+      <div class="nav">
+        <button id="b-back">Back</button>
+        <button id="b-review-now">Review answers</button>
+        <button id="b-next">Next</button>
+      </div>
+      <p class="muted" style="font-size:14px">Tip: tap an answer to move on. On a keyboard, press 1 to 5.</p>
+      <button id="b-to-list">Switch to all on one page</button>
+    </div>
+  </section>
+
+  <!-- LIST MODE -->
+  <section id="v-list" class="hidden">
+    <div class="card sticky">
+      <div class="progress">
+        <div class="progress-top"><span>All statements</span><span id="l-done">0 of 50 answered</span></div>
+        <div class="bar"><i id="l-bar"></i></div>
+      </div>
+      <div class="row">
+        <button class="primary" id="b-list-results" disabled>See my results</button>
+        <button id="b-to-guided">Switch to one at a time</button>
+      </div>
+    </div>
+    <div class="card">
+      <p class="muted">Pick 1 to 5 for each statement. 1 = very inaccurate, 5 = very accurate. Under each one you'll see what it asks and what each end means.</p>
+      <div class="review-list" id="l-list"></div>
+    </div>
+    <div class="row"><button class="primary" id="b-list-results2" disabled>See my results</button></div>
+  </section>
+
+  <!-- REVIEW -->
+  <section id="v-review" class="hidden">
+    <div class="card">
+      <h2>Review your answers</h2>
+      <p class="muted">Tap a number to change any answer. Every statement needs an answer before you see your results.</p>
+      <p id="r-status" class="flag"></p>
+      <div class="row">
+        <button class="primary" id="b-results">See my results</button>
+        <button id="b-back-quiz">Back to questions</button>
+      </div>
+    </div>
+    <div class="card"><div class="review-list" id="r-list"></div></div>
+    <div class="row"><button class="primary" id="b-results2">See my results</button></div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="v-results" class="hidden">
+    <div class="card">
+      <div class="eyebrow" id="res-who">Your profile</div>
+      <h1>Your results</h1>
+      <p>Each trait is scored from 10 to 50. Both ends of every trait have strengths. Read this as a starting point for a conversation with your coach: <b>does this sound like you?</b></p>
+      <div class="summary" id="res-summary"></div>
+    </div>
+
+    <div class="card">
+      <h3>Save and send</h3>
+      <p class="muted">Share your results as a PDF. On a phone, pick WhatsApp, email or any app from the list that opens.</p>
+      <div class="row">
+        <button class="primary" id="b-share">Share PDF (WhatsApp, email…)</button>
+        <button id="b-pdf">Download PDF</button>
+      </div>
+      <div class="row">
+        <a class="btn" id="b-wa" href="#" target="_blank" rel="noopener">Send text summary on WhatsApp</a>
+        <button id="b-copy">Copy summary</button>
+      </div>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </div>
+
+    <div id="res-traits" style="display:flex;flex-direction:column;gap:20px"></div>
+
+    <div class="card">
+      <h3>Keep in mind</h3>
+      <ul class="plain">
+        <li>This is a snapshot of how you see yourself today. Treat it as ideas to explore, not fixed facts.</li>
+        <li>The score bands are a practical coaching guide, not official population norms.</li>
+        <li>This is a self-awareness tool, not a clinical test. If you are going through a hard time, talk to your coach or a qualified sport psychologist or mental health professional.</li>
+        <li>Doing it again in 6 to 12 months is a good way to reflect on change.</li>
+      </ul>
+    </div>
+
+    <div class="card refs">
+      <h3>References</h3>
+      <ul class="plain">
+        <li>Goldberg, L. R. (1992). The development of markers for the Big-Five factor structure. <i>Psychological Assessment, 4</i>(1), 26 to 42.</li>
+        <li>Goldberg, L. R. (1999). A broad-bandwidth, public-domain personality inventory measuring the lower-level facets of several five-factor models. In I. Mervielde et al. (Eds.), <i>Personality Psychology in Europe, 7</i>, 7 to 28.</li>
+        <li>International Personality Item Pool (IPIP), 50-item Big-Five Factor Markers, public domain: <a href="https://ipip.ori.org/newBigFive5broadKey.htm">ipip.ori.org</a></li>
+        <li>Allen, M. S., Greenlees, I., &amp; Jones, M. (2013). Personality in sport: a comprehensive review. <i>International Review of Sport and Exercise Psychology, 6</i>(1), 184 to 208.</li>
+      </ul>
+      <p class="muted" style="font-size:14px">Sport interpretation notes and score bands are coaching guidance, not normative data.</p>
+    </div>
+
+    <div class="row">
+      <button id="b-edit">Review or change my answers</button>
+      <button id="b-restart">Start again</button>
+    </div>
+    <div class="card hidden" id="restart-confirm">
+      <p><b>Clear all answers and start again?</b> This cannot be undone.</p>
+      <div class="row"><button class="primary" id="b-restart-yes">Yes, clear and restart</button><button id="b-restart-no">Cancel</button></div>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Items (IPIP 50-item Big-Five Factor Markers) ----------
+  var ITEMS = [
+    "Am the life of the party.", "Feel little concern for others.", "Am always prepared.", "Get stressed out easily.", "Have a rich vocabulary.",
+    "Don't talk a lot.", "Am interested in people.", "Leave my belongings around.", "Am relaxed most of the time.", "Have difficulty understanding abstract ideas.",
+    "Feel comfortable around people.", "Insult people.", "Pay attention to details.", "Worry about things.", "Have a vivid imagination.",
+    "Keep in the background.", "Sympathize with others' feelings.", "Make a mess of things.", "Seldom feel blue.", "Am not interested in abstract ideas.",
+    "Start conversations.", "Am not interested in other people's problems.", "Get chores done right away.", "Am easily disturbed.", "Have excellent ideas.",
+    "Have little to say.", "Have a soft heart.", "Often forget to put things back in their proper place.", "Get upset easily.", "Do not have a good imagination.",
+    "Talk to a lot of different people at parties.", "Am not really interested in others.", "Like order.", "Change my mood a lot.", "Am quick to understand things.",
+    "Don't like to draw attention to myself.", "Take time out for others.", "Shirk my duties.", "Have frequent mood swings.", "Use difficult words.",
+    "Don't mind being the center of attention.", "Feel others' emotions.", "Follow a schedule.", "Get irritated easily.", "Spend time reflecting on things.",
+    "Am quiet around strangers.", "Make people feel at ease.", "Am exacting in my work.", "Often feel blue.", "Am full of ideas."
+  ];
+  // Plain explanation per statement: [what it asks, what 1 means, what 5 means]. The statement itself is unchanged.
+  var HELP = [
+    ["Do you bring the energy and fun when you are in a group?", "I am rarely the one who livens up a group.", "I am usually the one bringing the energy and fun."],
+    ["Are you mostly unbothered by how other people are doing?", "I care a lot about how others are doing.", "I rarely think about how others are doing."],
+    ["Are you ready ahead of time, with your kit, plan and what you need?", "I often show up without things ready.", "I am always ready ahead of time."],
+    ["Does pressure quickly make you feel tense?", "It takes a lot to stress me.", "Small pressures stress me quickly."],
+    ["Do you know and use a wide range of words?", "I use simple, everyday words.", "I know and use many different words."],
+    ["Are you usually quiet in conversations?", "I talk a lot.", "I say little most of the time."],
+    ["Are you curious about other people and their lives?", "Other people's lives don't interest me much.", "I am genuinely curious about people."],
+    ["Do you leave your things lying around instead of putting them away?", "I always put my things away.", "My things are often left lying around."],
+    ["Do you feel calm on most days?", "I rarely feel relaxed.", "I feel calm most of the time."],
+    ["Do theories and big-picture concepts (abstract ideas) feel hard to follow?", "I follow theories and concepts easily.", "Theories and concepts are hard for me to follow."],
+    ["Are you at ease in the company of others?", "I feel uneasy around people.", "I feel at ease around people."],
+    ["Do you say hurtful or rude things to people?", "I never put people down.", "I often say hurtful things to people."],
+    ["Do you notice small things that others might miss?", "I focus on the big picture and miss details.", "I notice the small details."],
+    ["Do worries often stay on your mind?", "I rarely worry.", "I worry a lot."],
+    ["Can you easily picture things in your mind and imagine new possibilities?", "I rarely imagine or daydream.", "My mind easily creates pictures and ideas."],
+    ["Do you prefer staying out of the spotlight in a group?", "I put myself forward in groups.", "I stay in the background."],
+    ["Do you understand and care when others feel hurt or happy?", "Others' feelings don't move me much.", "I strongly care about how others feel."],
+    ["Do things often go wrong or get disorganised when you handle them?", "I handle things neatly and well.", "I often make a mess of things."],
+    ["Is it rare for you to feel sad or low (blue)?", "I often feel sad or low.", "I almost never feel sad or low."],
+    ["Do theories and big-picture concepts (abstract ideas) bore you?", "I enjoy theories and concepts.", "Theories and concepts don't interest me."],
+    ["Are you usually the first to start talking?", "I wait for others to talk first.", "I am usually the one who starts talking."],
+    ["Do you tune out when people talk about their problems?", "I listen and care about others' problems.", "Others' problems don't interest me."],
+    ["Do you do tasks straight away instead of putting them off?", "I put tasks off.", "I do tasks straight away."],
+    ["Do things easily unsettle you or throw you off?", "Very little unsettles me.", "I am easily thrown off."],
+    ["Do you often come up with strong, useful ideas?", "Good ideas don't come easily to me.", "I often come up with excellent ideas."],
+    ["Do you often have nothing much to add in conversations?", "I always have something to say.", "I usually have little to say."],
+    ["Are you kind and easily moved by others?", "I am tough and not easily moved.", "I am kind-hearted and easily moved."],
+    ["Do you forget to return things to where they belong?", "I always put things back.", "I often leave things out of place."],
+    ["Do small things quickly upset you?", "It takes a lot to upset me.", "I get upset easily."],
+    ["Do you find it hard to imagine things that aren't in front of you?", "I imagine things easily.", "Imagining things is hard for me."],
+    ["At social events, do you move around and chat with many people?", "I stick to one or two people, or keep to myself.", "I talk with lots of different people."],
+    ["Do other people generally not hold your interest?", "I am interested in others.", "Others don't really interest me."],
+    ["Do you like things tidy, planned and in their place?", "Order doesn't matter much to me.", "I like everything in order."],
+    ["Does your mood shift often during a day or week?", "My mood stays steady.", "My mood changes a lot."],
+    ["Do you pick up new things fast?", "I need more time to understand new things.", "I understand new things quickly."],
+    ["Do you avoid being noticed?", "I am happy to be noticed.", "I avoid drawing attention."],
+    ["Do you make time to help or be there for people?", "I rarely make time for others.", "I often make time for others."],
+    ["Do you avoid doing what you are supposed to do (shirk your duties)?", "I always do my duties.", "I often avoid my duties."],
+    ["Do your feelings swing quickly from high to low?", "My feelings are stable.", "My feelings swing often."],
+    ["Do you use advanced or uncommon words when you speak or write?", "I stick to simple words.", "I often use advanced words."],
+    ["Are you comfortable when everyone is looking at you?", "I dislike being the centre of attention.", "I am comfortable with all eyes on me."],
+    ["Do you pick up and feel what others are feeling?", "I rarely sense what others feel.", "I strongly feel what others feel."],
+    ["Do you plan your time and stick to it?", "I go with the flow without a plan.", "I plan my time and stick to it."],
+    ["Do little things quickly annoy you?", "I rarely get annoyed.", "Little things annoy me quickly."],
+    ["Do you often think things over deeply?", "I rarely stop to think things over.", "I often think things over deeply."],
+    ["Do you tend to stay quiet with people you don't know?", "I chat easily with strangers.", "I go quiet around strangers."],
+    ["Do people feel relaxed and comfortable around you?", "People can feel tense around me.", "People feel relaxed around me."],
+    ["Do you demand high standards and precision from yourself (exacting)?", "Good enough is fine for me.", "I demand precision and high standards."],
+    ["Do you often feel sad or low (blue)?", "I rarely feel sad or low.", "I often feel sad or low."],
+    ["Do ideas come to you all the time?", "Ideas don't come to me often.", "My head is full of ideas."]
+  ];
+  var REVERSE = [2, 6, 8, 9, 10, 12, 16, 18, 19, 20, 22, 26, 28, 30, 32, 36, 38, 46];
+  var TRAIT_OF = { 1: "E", 2: "A", 3: "C", 4: "N", 0: "O" }; // item number mod 5
+  var ORDER = ["O", "C", "E", "A", "N"];
+  var LABELS = ["Very inaccurate", "Moderately inaccurate", "Neither accurate nor inaccurate", "Moderately accurate", "Very accurate"];
+  var BANDS = [
+    { name: "Low", min: 10, max: 22 },
+    { name: "Below average", min: 23, max: 29 },
+    { name: "Average", min: 30, max: 36 },
+    { name: "Above average", min: 37, max: 43 },
+    { name: "High", min: 44, max: 50 }
+  ];
+
+  var TRAITS = {
+    O: {
+      name: "Openness", sub: "Imagination and curiosity",
+      what: "How much you enjoy new ideas, variety and figuring out the why behind things.",
+      high: "You are curious and creative. You like variety, new drills and understanding why you are doing something. You learn well when you can experiment with tactics or technique. Doing the same thing over and over may bore you.",
+      low: "You are practical and like what is familiar and proven. You do your best with clear, steady routines and instructions you can see demonstrated. Big changes work better for you when they come step by step, with the practical payoff explained.",
+      mid: "You sit in the middle. You can enjoy something new, and you are also comfortable with a proven routine. You can lean either way depending on the situation.",
+      tipHigh: "Ask your coach for the reason behind drills and offer your own ideas on tactics. Keep some routine so variety does not cost you consistency.",
+      tipLow: "Lean on your routines; they are a strength. When something new is introduced, ask for a demonstration and what it will improve.",
+      tipMid: "Use routine to build consistency, and take on a new challenge now and then to keep learning.",
+      ask: "When a coach changes a drill or tactic, do you feel excited, or would you rather stick with what works?"
+    },
+    C: {
+      name: "Conscientiousness", sub: "Organisation and discipline",
+      what: "How organised, disciplined and goal-driven you are with plans, training and routines.",
+      high: "You are organised, disciplined and reliable with your training plan, nutrition and recovery. You set goals and follow through. Watch out for perfectionism, overtraining and being too hard on yourself after mistakes.",
+      low: "You are flexible and spontaneous. Planning, consistency and admin may not come naturally. Outside structure helps you a lot: short-term goals, checklists, reminders and regular check-ins.",
+      mid: "You sit in the middle. You can be organised when it matters, and you can also go with the flow. Clear goals help you stay consistent.",
+      tipHigh: "Set process goals, and plan rest days as seriously as training days. Give yourself permission to be imperfect.",
+      tipLow: "Use a simple checklist or phone reminders for training, sleep and food. Agree on one short-term goal with your coach each week.",
+      tipMid: "Pick one or two habits to make automatic, such as a fixed sleep time or a pre-training checklist.",
+      ask: "What happens to your training when nobody is checking on you?"
+    },
+    E: {
+      name: "Extraversion", sub: "Social energy",
+      what: "Whether you get your energy from people and action, or from quiet and time alone.",
+      high: "You get energy from people. You enjoy team settings, talking and the buzz of competition. Public encouragement and high-energy sessions fire you up. Staying focused and doing solo work may be harder.",
+      low: "You are more reserved and recharge with quiet and time alone. You like to think things through and often prefer private feedback. Being quiet does not mean you are less motivated or committed.",
+      mid: "You sit in the middle. You enjoy people and team energy, and you also need some quiet time to reset.",
+      tipHigh: "Use team energy to lift your effort, and practise short focus routines for moments that need calm, such as a free kick or a serve.",
+      tipLow: "Tell your coach you prefer one-to-one feedback. Use quiet time before competition to prepare in your own way.",
+      tipMid: "Notice which situations charge you and which drain you, and plan your pre-game time around that.",
+      ask: "Before a big game, do you want people and noise around you, or space and quiet?"
+    },
+    A: {
+      name: "Agreeableness", sub: "Cooperation and empathy",
+      what: "How cooperative, caring and team-oriented you are, compared with direct and competitive.",
+      high: "You are cooperative, caring and a strong team player. You tend to avoid conflict. You may hold back from being assertive or competitive, or hide disagreement to keep the peace.",
+      low: "You are direct, competitive and questioning. You are comfortable with confrontation, which can make you a strong competitor. Teamwork, taking criticism and handling friction with others may need extra attention.",
+      mid: "You sit in the middle. You can work well with others and also stand your ground when it matters.",
+      tipHigh: "Practise being assertive: say what you need, and allow yourself a competitive edge. Being kind and being tough can go together.",
+      tipLow: "Be clear on your role in the team, and practise hearing feedback fully before you respond.",
+      tipMid: "Notice when you go along with others to keep the peace, and when speaking up would help the team more.",
+      ask: "When you disagree with a teammate or coach, what do you usually do?"
+    },
+    N: {
+      name: "Emotional Reactivity", sub: "Also called Neuroticism",
+      what: "How strongly you feel pressure, nerves and setbacks. A higher score means you react more; a lower score means you stay steadier.",
+      high: "You feel pressure, nerves and setbacks strongly. This often means you care a lot. You benefit from a pre-performance routine, breathing to control nerves, reframing setbacks and clear, specific feedback.",
+      low: "You are calm and steady under pressure and bounce back quickly from mistakes. Sometimes you may seem too relaxed. Check that you are switched on enough before competition.",
+      mid: "You sit in the middle. Pressure affects you at times, and you can usually find your way back to steady.",
+      tipHigh: "Build a short pre-performance routine and practise slow breathing (for example, breathe in for 4, out for 6). Have one reset word or action for after mistakes.",
+      tipLow: "Use your calm in key moments. Build a warm-up that raises your energy so you are fully activated.",
+      tipMid: "Learn your early signs of stress and have one breathing or reset tool ready for big moments.",
+      ask: "After a mistake in a game, how long does it stay with you, and what helps you let it go?"
+    }
+  };
+
+  // ---------- State ----------
+  var KEY = "bigfive-athlete-v1";
+  var state = { answers: new Array(50).fill(0), idx: 0, info: {} };
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  function load() {
+    try {
+      var s = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (s && Array.isArray(s.answers) && s.answers.length === 50) return s;
+    } catch (e) {}
+    return null;
+  }
+
+  var $ = function (id) { return document.getElementById(id); };
+  var views = ["welcome", "quiz", "list", "review", "results"];
+  function show(v) {
+    views.forEach(function (n) { $("v-" + n).classList.toggle("hidden", n !== v); });
+    window.scrollTo(0, 0);
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function sentence(i) { var t = ITEMS[i]; return "I " + t.charAt(0).toLowerCase() + t.slice(1); }
+  function answeredCount() { return state.answers.filter(function (a) { return a > 0; }).length; }
+
+  // ---------- Welcome ----------
+  $("f-date").value = new Date().toISOString().slice(0, 10);
+  $("f-agree").addEventListener("change", function () { $("b-start").disabled = !this.checked; });
+  function readInfo() {
+    state.info = { name: $("f-name").value.trim(), date: $("f-date").value, sport: $("f-sport").value.trim(), age: $("f-age").value.trim() };
+  }
+  var saved = load();
+  if (saved && saved.answers.some(function (a) { return a > 0; })) {
+    $("b-resume").classList.remove("hidden");
+    $("b-resume").textContent = "Continue where I left off (" + saved.answers.filter(function (a) { return a > 0; }).length + " of 50)";
+    if (saved.info) {
+      $("f-name").value = saved.info.name || ""; $("f-sport").value = saved.info.sport || "";
+      $("f-age").value = saved.info.age || ""; if (saved.info.date) $("f-date").value = saved.info.date;
+    }
+  }
+  function chosenMode() { return $("mode-list").checked ? "list" : "guided"; }
+  function openAnswering() {
+    if (state.mode === "list") { renderList(); show("list"); } else { renderQ(); show("quiz"); }
+  }
+  if (saved && saved.mode === "list") $("mode-list").checked = true;
+  $("b-start").addEventListener("click", function () {
+    readInfo(); state.answers = new Array(50).fill(0); state.idx = 0; state.mode = chosenMode(); save(); openAnswering();
+  });
+  $("b-resume").addEventListener("click", function () {
+    state = saved; readInfo(); state.mode = chosenMode(); save();
+    if (answeredCount() === 50) { renderReview(); show("review"); } else openAnswering();
+  });
+  $("b-to-list").addEventListener("click", function () {
+    clearTimeout(advanceTimer); state.mode = "list"; $("mode-list").checked = true; save(); renderList(); show("list");
+    var el = $("litem-" + (state.idx + 1)); if (el) el.scrollIntoView({ block: "center" });
+  });
+  $("b-to-guided").addEventListener("click", function () {
+    state.mode = "guided"; $("mode-guided").checked = true;
+    var firstMissing = state.answers.indexOf(0); if (firstMissing >= 0) state.idx = firstMissing;
+    save(); renderQ(); show("quiz");
+  });
+
+  // ---------- Quiz ----------
+  var ansBox = $("q-answers");
+  LABELS.forEach(function (lab, k) {
+    var b = document.createElement("button");
+    b.className = "answer"; b.type = "button"; b.dataset.v = k + 1; b.id = "ans-" + (k + 1);
+    b.innerHTML = '<span class="n">' + (k + 1) + '</span><span class="lab"><span>' + lab + '</span><span class="sub"></span></span>';
+    b.addEventListener("click", function () { choose(k + 1); });
+    ansBox.appendChild(b);
+  });
+  var advanceTimer = null;
+  function choose(v) {
+    state.answers[state.idx] = v; save(); renderQ();
+    clearTimeout(advanceTimer);
+    advanceTimer = setTimeout(function () {
+      if (state.idx < 49) { state.idx++; save(); renderQ(); }
+      else { renderReview(); show("review"); }
+    }, 260);
+  }
+  function renderQ() {
+    var i = state.idx, done = answeredCount();
+    $("q-count").textContent = "Question " + (i + 1) + " of 50";
+    $("q-done").textContent = done + " answered";
+    $("q-bar").style.width = (done / 50 * 100) + "%";
+    $("q-num").textContent = "Statement " + (i + 1);
+    $("q-text").textContent = sentence(i);
+    $("q-hint").textContent = "What this asks: " + HELP[i][0];
+    Array.prototype.forEach.call(ansBox.children, function (b) {
+      var v = +b.dataset.v;
+      b.setAttribute("aria-pressed", String(v === state.answers[i]));
+      b.querySelector(".sub").textContent = v === 1 ? '"' + HELP[i][1] + '"' : v === 5 ? '"' + HELP[i][2] + '"' : "";
+    });
+    $("b-back").disabled = i === 0;
+    $("b-next").textContent = i === 49 ? "Review" : "Next";
+  }
+  $("b-back").addEventListener("click", function () { clearTimeout(advanceTimer); if (state.idx > 0) { state.idx--; save(); renderQ(); } });
+  $("b-next").addEventListener("click", function () {
+    clearTimeout(advanceTimer);
+    if (state.idx < 49) { state.idx++; save(); renderQ(); } else { renderReview(); show("review"); }
+  });
+  $("b-review-now").addEventListener("click", function () { clearTimeout(advanceTimer); renderReview(); show("review"); });
+  document.addEventListener("keydown", function (e) {
+    if ($("v-quiz").classList.contains("hidden")) return;
+    if (e.target && e.target.tagName === "INPUT") return;
+    if (e.key >= "1" && e.key <= "5") choose(+e.key);
+    else if (e.key === "ArrowLeft") $("b-back").click();
+    else if (e.key === "ArrowRight") $("b-next").click();
+  });
+
+  // ---------- Review ----------
+  // prefix "r" = review list (missing flagged), "l" = list answering mode (help shown, not flagged until touched)
+  function buildList(listId, prefix, withHelp) {
+    var list = $(listId); list.innerHTML = "";
+    ITEMS.forEach(function (_, i) {
+      var row = document.createElement("div");
+      var flagMissing = prefix === "r" && !state.answers[i];
+      row.className = "ritem" + (flagMissing ? " missing" : ""); row.id = prefix + "item-" + (i + 1);
+      var html = '<span class="num">' + (i + 1) + '</span><span class="stmt">' + esc(sentence(i)) +
+        (flagMissing ? ' <span class="flag">Not answered</span>' : "") + "</span>";
+      if (withHelp) html += '<span class="ex">' + esc(HELP[i][0]) + "</span>";
+      html += '<div class="mini" role="group" aria-label="Answer for statement ' + (i + 1) + '">';
+      for (var v = 1; v <= 5; v++) {
+        html += '<button type="button" id="' + prefix + (i + 1) + "-" + v + '" aria-label="' + LABELS[v - 1] + '" title="' + LABELS[v - 1] + '" aria-pressed="' + (state.answers[i] === v) + '" data-i="' + i + '" data-v="' + v + '">' + v + "</button>";
+      }
+      html += "</div>";
+      if (withHelp) html += '<div class="ends"><span>1 = ' + esc(HELP[i][1]) + "</span><span>5 = " + esc(HELP[i][2]) + "</span></div>";
+      row.innerHTML = html;
+      list.appendChild(row);
+    });
+  }
+  function renderReview() { buildList("r-list", "r", false); updateReviewStatus(); }
+  function renderList() { buildList("l-list", "l", true); updateReviewStatus(); }
+  function onListClick(prefix) {
+    return function (e) {
+      var b = e.target.closest("button[data-i]"); if (!b) return;
+      var i = +b.dataset.i, v = +b.dataset.v;
+      state.answers[i] = v; state.idx = i; save();
+      var row = $(prefix + "item-" + (i + 1));
+      row.classList.remove("missing");
+      var f = row.querySelector(".flag"); if (f) f.remove();
+      row.querySelectorAll("button[data-i]").forEach(function (x) { x.setAttribute("aria-pressed", String(+x.dataset.v === v)); });
+      updateReviewStatus();
+    };
+  }
+  $("r-list").addEventListener("click", onListClick("r"));
+  $("l-list").addEventListener("click", onListClick("l"));
+  function updateReviewStatus() {
+    var done = answeredCount(), missing = 50 - done;
+    $("r-status").textContent = missing ? missing + " statement" + (missing > 1 ? "s" : "") + " still need an answer (highlighted below)." : "";
+    $("b-results").disabled = $("b-results2").disabled = missing > 0;
+    $("b-list-results").disabled = $("b-list-results2").disabled = missing > 0;
+    $("l-done").textContent = done + " of 50 answered";
+    $("l-bar").style.width = (done / 50 * 100) + "%";
+  }
+  $("b-list-results").addEventListener("click", function () { goResults(); });
+  $("b-list-results2").addEventListener("click", function () { goResults(); });
+  $("b-back-quiz").addEventListener("click", function () {
+    var firstMissing = state.answers.indexOf(0);
+    if (firstMissing >= 0) state.idx = firstMissing;
+    if (state.mode === "list") {
+      renderList(); show("list");
+      var el = $("litem-" + (state.idx + 1)); if (el) el.scrollIntoView({ block: "center" });
+    } else { renderQ(); show("quiz"); }
+  });
+  function goResults() { renderResults(); show("results"); }
+  $("b-results").addEventListener("click", goResults);
+  $("b-results2").addEventListener("click", goResults);
+
+  // ---------- Scoring ----------
+  function scores() {
+    var s = { O: 0, C: 0, E: 0, A: 0, N: 0 };
+    state.answers.forEach(function (a, i) {
+      var n = i + 1, v = REVERSE.indexOf(n) >= 0 ? 6 - a : a;
+      s[TRAIT_OF[n % 5]] += v;
+    });
+    return s;
+  }
+  function bandOf(x) { for (var k = 0; k < BANDS.length; k++) if (x >= BANDS[k].min && x <= BANDS[k].max) return k; return 0; }
+  function textFor(t, b) {
+    var T = TRAITS[t];
+    if (b <= 1) return { meaning: T.low, tip: T.tipLow };
+    if (b >= 3) return { meaning: T.high, tip: T.tipHigh };
+    return { meaning: T.mid, tip: T.tipMid };
+  }
+
+  // ---------- Results ----------
+  var lastScores = null;
+  function trackHTML(score) {
+    var b = bandOf(score), html = '<div class="track" aria-hidden="true">';
+    for (var k = 0; k < 5; k++) html += "<span" + (k === b ? ' class="on"' : "") + "></span>";
+    html += '<i class="marker" style="left:' + ((score - 10) / 40 * 100) + '%"></i></div>';
+    html += '<div class="scale-labels"><span>Low</span><span>Below</span><span>Avg</span><span>Above</span><span>High</span></div>';
+    return html;
+  }
+  function renderResults() {
+    readInfoFromState();
+    var s = scores(); lastScores = s;
+    var who = [state.info.name, state.info.sport].filter(Boolean).join(" · ");
+    $("res-who").textContent = who ? who : "Your profile";
+    var sum = $("res-summary"); sum.innerHTML = "";
+    ORDER.forEach(function (t) {
+      var b = bandOf(s[t]);
+      var row = document.createElement("div"); row.className = "srow";
+      row.innerHTML = '<span class="name">' + TRAITS[t].name + ' <span class="pill">' + BANDS[b].name + '</span></span><span class="score">' + s[t] + " / 50</span>" + trackHTML(s[t]);
+      sum.appendChild(row);
+    });
+    var box = $("res-traits"); box.innerHTML = "";
+    ORDER.forEach(function (t) {
+      var T = TRAITS[t], b = bandOf(s[t]), tx = textFor(t, b);
+      var extra = t === "N" ? '<p class="muted" style="font-size:15px">Emotional stability score: <b>' + (60 - s[t]) + ' / 50</b> (the same result read the other way round: 60 minus your reactivity score).</p>' : "";
+      var c = document.createElement("div"); c.className = "card";
+      c.innerHTML = '<div class="trait-head"><div><h2>' + T.name + '</h2><div class="trait-sub">' + T.sub + '</div></div><div><span class="pill">' + BANDS[b].name + '</span> <b style="font-family:var(--display);font-size:24px">' + s[t] + "</b></div></div>" +
+        '<p class="muted">' + T.what + "</p>" + extra +
+        '<div class="block"><b>What your score means</b><p>' + tx.meaning + "</p></div>" +
+        '<div class="block"><b>Try this</b><p>' + tx.tip + "</p></div>" +
+        '<div class="ask">' + T.ask + "</div>";
+      box.appendChild(c);
+    });
+    $("b-wa").href = "https://wa.me/?text=" + encodeURIComponent(summaryText());
+    $("toast").textContent = "";
+  }
+  function readInfoFromState() { state.info = state.info || {}; }
+
+  function summaryText() {
+    var s = lastScores || scores(), i = state.info || {};
+    var lines = ["Athlete Personality Profile (Big Five)"];
+    if (i.name) lines.push("Name: " + i.name);
+    if (i.sport) lines.push("Sport / position: " + i.sport);
+    if (i.age) lines.push("Age: " + i.age);
+    lines.push("Date: " + (i.date || new Date().toISOString().slice(0, 10)), "");
+    ORDER.forEach(function (t) { lines.push(TRAITS[t].name + ": " + s[t] + "/50 (" + BANDS[bandOf(s[t])].name + ")"); });
+    lines.push("Emotional stability: " + (60 - s.N) + "/50", "", "Answers 1-50: " + state.answers.join(","));
+    return lines.join("\n");
+  }
+
+  var toastTimer;
+  function toast(msg) { $("toast").textContent = msg; clearTimeout(toastTimer); toastTimer = setTimeout(function () { $("toast").textContent = ""; }, 5000); }
+  $("b-copy").addEventListener("click", function () {
+    var txt = summaryText();
+    try {
+      navigator.clipboard.writeText(txt).then(function () { toast("Summary copied. Paste it into a message to your coach."); }, function () { toast("Copy was blocked here. Use the WhatsApp button or the PDF instead."); });
+    } catch (e) { toast("Copy was blocked here. Use the WhatsApp button or the PDF instead."); }
+  });
+
+  // ---------- PDF ----------
+  var downloads = null;
+  try {
+    if (window.claude && typeof window.claude.use === "function") {
+      window.claude.use("downloads").then(function (d) { downloads = d; }, function () {});
+    }
+  } catch (e) {}
+
+  function buildPDF() {
+    var J = window.jspdf.jsPDF, doc = new J({ unit: "mm", format: "a4" });
+    var W = 210, M = 16, CW = W - 2 * M, y = 18;
+    var s = lastScores || scores(), info = state.info || {};
+    var navy = [20, 35, 58], teal = [14, 124, 134], grey = [91, 104, 120], light = [226, 242, 243], track = [217, 223, 230];
+    function need(h) { if (y + h > 282) { doc.addPage(); y = 18; } }
+    function text(str, size, color, style, width) {
+      doc.setFont("helvetica", style || "normal"); doc.setFontSize(size); doc.setTextColor.apply(doc, color || navy);
+      var lines = doc.splitTextToSize(str, width || CW), lh = size * 0.42;
+      need(lines.length * lh);
+      doc.text(lines, M, y + lh * 0.8); y += lines.length * lh;
+    }
+    text("Athlete Personality Profile", 22, navy, "bold"); y += 1;
+    text("Big Five self-reflection results", 11, teal); y += 3;
+    var meta = [["Name", info.name || "-"], ["Sport / position", info.sport || "-"], ["Age", info.age || "-"], ["Date", info.date || new Date().toISOString().slice(0, 10)]];
+    doc.setFontSize(10);
+    meta.forEach(function (m, k) {
+      var x = M + (k % 2) * (CW / 2), yy = y + Math.floor(k / 2) * 6;
+      doc.setFont("helvetica", "bold"); doc.setTextColor.apply(doc, grey); doc.text(m[0] + ":", x, yy + 4);
+      doc.setFont("helvetica", "normal"); doc.setTextColor.apply(doc, navy); doc.text(String(m[1]), x + 30, yy + 4);
+    });
+    y += 15;
+    doc.setDrawColor.apply(doc, track); doc.line(M, y, W - M, y); y += 6;
+
+    // Summary bars
+    text("Your scores (each trait 10 to 50)", 13, navy, "bold"); y += 2;
+    var segs = [13, 7, 7, 7, 7], barX = M + 58, barW = CW - 58 - 34;
+    ORDER.forEach(function (t) {
+      var b = bandOf(s[t]);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(10.5); doc.setTextColor.apply(doc, navy);
+      doc.text(TRAITS[t].name, M, y + 4);
+      var x = barX;
+      segs.forEach(function (w, k) {
+        var ww = barW * w / 41;
+        doc.setFillColor.apply(doc, k === b ? teal : track);
+        doc.rect(x, y, ww - 0.6, 5.5, "F"); x += ww;
+      });
+      var mx = barX + barW * (s[t] - 10) / 40;
+      doc.setFillColor.apply(doc, navy); doc.rect(mx - 0.6, y - 1, 1.2, 7.5, "F");
+      doc.setFont("helvetica", "bold"); doc.text(s[t] + " / 50", barX + barW + 4, y + 4);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor.apply(doc, grey);
+      doc.text(BANDS[b].name, barX + barW + 4, y + 8);
+      y += 12;
+    });
+    doc.setFontSize(8); doc.setTextColor.apply(doc, grey);
+    var lx = barX; ["Low 10-22", "Below 23-29", "Avg 30-36", "Above 37-43", "High 44-50"].forEach(function (l, k) { doc.text(l, lx, y); lx += barW * segs[k] / 41; });
+    y += 4;
+    text("Emotional stability (60 minus reactivity): " + (60 - s.N) + " / 50", 9, grey); y += 4;
+
+    // Trait detail
+    ORDER.forEach(function (t) {
+      var T = TRAITS[t], b = bandOf(s[t]), tx = textFor(t, b);
+      need(50);
+      doc.setFillColor.apply(doc, light); doc.rect(M, y, CW, 9, "F");
+      doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor.apply(doc, navy);
+      doc.text(T.name + "  |  " + s[t] + " / 50  |  " + BANDS[b].name, M + 3, y + 6); y += 12;
+      text(T.what, 9.5, grey, "italic"); y += 2;
+      text("What your score means", 9, teal, "bold"); text(tx.meaning, 10, navy); y += 2;
+      text("Try this", 9, teal, "bold"); text(tx.tip, 10, navy); y += 2;
+      text("Talk it through: " + T.ask, 10, grey, "italic"); y += 6;
+    });
+
+    // Answers
+    need(60);
+    text("Your answers (1 = very inaccurate, 5 = very accurate)", 12, navy, "bold"); y += 2;
+    doc.setFontSize(8.5);
+    var colW = CW / 2, rowH = 4.6, startY = y;
+    for (var i = 0; i < 50; i++) {
+      var col = i < 25 ? 0 : 1, r = i % 25;
+      var yy = startY + r * rowH;
+      if (yy + rowH > 285) { /* safety */ }
+      doc.setFont("helvetica", "normal"); doc.setTextColor.apply(doc, grey);
+      doc.text(String(i + 1) + ".", M + col * colW, yy + 3.5);
+      doc.setTextColor.apply(doc, navy);
+      var st = doc.splitTextToSize(sentence(i), colW - 18)[0];
+      doc.text(st, M + col * colW + 7, yy + 3.5);
+      doc.setFont("helvetica", "bold");
+      doc.text(String(state.answers[i]), M + col * colW + colW - 6, yy + 3.5);
+    }
+    y = startY + 25 * rowH + 6;
+
+    // Notes and references
+    need(70);
+    text("Keep in mind", 12, navy, "bold"); y += 1;
+    ["This is a snapshot of how you see yourself today. Treat it as ideas to explore with your coach, not fixed facts.",
+     "Score bands are a practical coaching guide, not official population norms.",
+     "This is a self-awareness tool, not a clinical test. If you are going through a hard time, talk to your coach or a qualified sport psychologist or mental health professional."
+    ].forEach(function (l) { text("- " + l, 9, navy); y += 1; });
+    y += 3;
+    text("References", 12, navy, "bold"); y += 1;
+    ["Goldberg, L. R. (1992). The development of markers for the Big-Five factor structure. Psychological Assessment, 4(1), 26-42.",
+     "Goldberg, L. R. (1999). A broad-bandwidth, public-domain personality inventory measuring the lower-level facets of several five-factor models. Personality Psychology in Europe, 7, 7-28.",
+     "International Personality Item Pool (IPIP), 50-item Big-Five Factor Markers, public domain: ipip.ori.org",
+     "Allen, M. S., Greenlees, I., & Jones, M. (2013). Personality in sport: a comprehensive review. International Review of Sport and Exercise Psychology, 6(1), 184-208."
+    ].forEach(function (l) { text(l, 8.5, grey); y += 1; });
+
+    var pages = doc.getNumberOfPages();
+    for (var p = 1; p <= pages; p++) {
+      doc.setPage(p); doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor.apply(doc, grey);
+      doc.text("Athlete Personality Profile  |  Items: IPIP 50-item Big-Five Factor Markers (public domain)", M, 291);
+      doc.text("Page " + p + " of " + pages, W - M, 291, { align: "right" });
+    }
+    return doc;
+  }
+
+  function makePDF() {
+    if (!window.jspdf) { toast("The PDF tool did not load. Check your connection and reload the page."); return null; }
+    var name = (state.info.name || "athlete").replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "-") || "athlete";
+    try { return { blob: buildPDF().output("blob"), filename: "Personality-Profile-" + name + ".pdf" }; }
+    catch (e) { toast("Could not build the PDF. Please try again."); return null; }
+  }
+  // Share: phone share sheet with the PDF attached (WhatsApp, email, etc.); falls back to download where sharing files is not allowed
+  $("b-share").addEventListener("click", function () {
+    var p = makePDF(); if (!p) return;
+    var file;
+    try { file = new File([p.blob], p.filename, { type: "application/pdf" }); } catch (e) { file = null; }
+    if (file && navigator.canShare && navigator.share) {
+      var ok = false;
+      try { ok = navigator.canShare({ files: [file] }); } catch (e) { ok = false; }
+      if (ok) {
+        navigator.share({ files: [file], title: "Athlete Personality Profile", text: "My Big Five athlete profile results" })
+          .then(function () { toast("Shared."); }, function (err) {
+            if (err && err.name === "AbortError") return; // viewer closed the share sheet
+            saveFile(p.blob, p.filename, true);
+          });
+        return;
+      }
+    }
+    saveFile(p.blob, p.filename, true);
+  });
+  $("b-pdf").addEventListener("click", function () {
+    var p = makePDF(); if (p) saveFile(p.blob, p.filename, false);
+  });
+  function saveFile(blob, filename, fromShare) {
+    var lead = fromShare ? "Sharing files is not available here, so the PDF was saved instead. " : "";
+    if (downloads) {
+      downloads.save({ filename: filename, data: blob }).then(function () {
+        toast(lead + "PDF saved. Attach it in WhatsApp or email to send it.");
+      }, function (err) {
+        var code = err && err.code;
+        if (code === "declined") toast("Download cancelled.");
+        else if (code === "rate_limited") toast("A download prompt is already open. Try again in a moment.");
+        else fallbackSave(blob, filename, lead);
+      });
+    } else fallbackSave(blob, filename, lead);
+  }
+  function fallbackSave(blob, filename, lead) {
+    try {
+      var url = URL.createObjectURL(blob), a = document.createElement("a");
+      a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      toast((lead || "") + "If no download started, use Send text summary on WhatsApp instead.");
+    } catch (e) { toast("Downloads are not available here. Use Copy summary or WhatsApp instead."); }
+  }
+
+  // ---------- Results actions ----------
+  $("b-edit").addEventListener("click", function () { renderReview(); show("review"); });
+  $("b-restart").addEventListener("click", function () { $("restart-confirm").classList.remove("hidden"); $("restart-confirm").scrollIntoView({ block: "center" }); });
+  $("b-restart-no").addEventListener("click", function () { $("restart-confirm").classList.add("hidden"); });
+  $("b-restart-yes").addEventListener("click", function () {
+    state = { answers: new Array(50).fill(0), idx: 0, info: {} };
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    $("restart-confirm").classList.add("hidden");
+    $("f-name").value = ""; $("f-sport").value = ""; $("f-age").value = ""; $("f-agree").checked = false; $("b-start").disabled = true;
+    $("b-resume").classList.add("hidden");
+    show("welcome");
+  });
+
+  // test hook for scoring
+  window.__bf = { scores: scores, state: function () { return state; }, set: function (a) { state.answers = a; } };
+})();
+</script>
+</body>
+</html>
