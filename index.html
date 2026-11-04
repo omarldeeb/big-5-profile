@@ -625,7 +625,7 @@ ul.plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
   function trackHTML(score) {
     var b = bandOf(score), html = '<div class="track" aria-hidden="true">';
     for (var k = 0; k < 5; k++) html += "<span" + (k === b ? ' class="on"' : "") + "></span>";
-    html += '<i class="marker" style="left:' + ((score - 10) / 40 * 100) + '%"></i></div>';
+    html += '<i class="marker" style="left:' + ((score - 9.5) / 41 * 100) + '%"></i></div>';
     html += '<div class="scale-labels"><span>Low</span><span>Below</span><span>Avg</span><span>Above</span><span>High</span></div>';
     return html;
   }
@@ -724,7 +724,7 @@ ul.plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
         doc.setFillColor.apply(doc, k === b ? teal : track);
         doc.rect(x, y, ww - 0.6, 5.5, "F"); x += ww;
       });
-      var mx = barX + barW * (s[t] - 10) / 40;
+      var mx = barX + barW * (s[t] - 9.5) / 41;
       doc.setFillColor.apply(doc, navy); doc.rect(mx - 0.6, y - 1, 1.2, 7.5, "F");
       doc.setFont("helvetica", "bold"); doc.text(s[t] + " / 50", barX + barW + 4, y + 4);
       doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor.apply(doc, grey);
@@ -750,14 +750,13 @@ ul.plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
     });
 
     // Answers
-    need(60);
+    need(25 * 4.6 + 16);
     text("Your answers (1 = very inaccurate, 5 = very accurate)", 12, navy, "bold"); y += 2;
     doc.setFontSize(8.5);
     var colW = CW / 2, rowH = 4.6, startY = y;
     for (var i = 0; i < 50; i++) {
       var col = i < 25 ? 0 : 1, r = i % 25;
       var yy = startY + r * rowH;
-      if (yy + rowH > 285) { /* safety */ }
       doc.setFont("helvetica", "normal"); doc.setTextColor.apply(doc, grey);
       doc.text(String(i + 1) + ".", M + col * colW, yy + 3.5);
       doc.setTextColor.apply(doc, navy);
@@ -855,8 +854,6 @@ ul.plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
     show("welcome");
   });
 
-  // test hook for scoring
-  window.__bf = { scores: scores, state: function () { return state; }, set: function (a) { state.answers = a; } };
 })();
 </script>
 </body>
