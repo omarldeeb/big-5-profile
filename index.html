@@ -277,6 +277,12 @@ ul.plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
       <div class="toast" id="toast" role="status" aria-live="polite"></div>
     </div>
 
+    <div class="card">
+      <h3>Want a personal action plan?</h3>
+      <p class="muted">If your coach gave you an access code, download your PDF above, then send it with your code. You'll get a course of action and a step-by-step plan built around your goals.</p>
+      <div class="row"><a class="btn" href="https://omarldeeb.github.io/big-5-advanced/">Go to the advanced plan</a></div>
+    </div>
+
     <div id="res-traits" style="display:flex;flex-direction:column;gap:20px"></div>
 
     <div class="card">
@@ -774,6 +780,10 @@ ul.plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
     var J = window.jspdf.jsPDF, doc = new J({ unit: "mm", format: "a4" });
     var W = 210, M = 16, CW = W - 2 * M, y = 18;
     var s = lastScores || scores(), info = state.info || {};
+    // Exact results travel inside the PDF so the Advanced submission (and the action-plan skill) never has to scrape text
+    var data = { v: 1, info: info, scores: s, answers: state.answers };
+    doc.setProperties({ title: "Athlete Personality Profile", subject: "Big Five self-reflection results", creator: "Athlete Personality Profile",
+      keywords: "b5data:" + btoa(unescape(encodeURIComponent(JSON.stringify(data)))) });
     var navy = [20, 35, 58], teal = [14, 124, 134], grey = [91, 104, 120], light = [226, 242, 243], track = [217, 223, 230];
     function need(h) { if (y + h > 282) { doc.addPage(); y = 18; } }
     function text(str, size, color, style, width) {
